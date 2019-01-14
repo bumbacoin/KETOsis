@@ -1,0 +1,11 @@
+# List of fixed seed nodes for main network
+
+# IPv4 nodes
+    45.63.7.226 // Vultr cloud node 1
+    104.156.238.199 // Vultr cloud node 2
+    45.76.126.193 // Vultr cloud node 3
+
+# IPv6 nodes
+
+
+# Onion nodes
