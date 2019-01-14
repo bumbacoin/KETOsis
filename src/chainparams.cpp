@@ -20,7 +20,28 @@ struct SeedSpec6 {
 
 #include "chainparamsseeds.h"
 
-
+ void MineGenesis(CBlock genesis){
+      // This will figure out a valid hash and Nonce if you're creating a different genesis block:
+      uint256 hashTarget = CBigNum().SetCompact(Params().ProofOfWorkLimit().GetCompact()).getuint256();
+      printf("Target: %s\n", hashTarget.GetHex().c_str());
+      uint256 newhash = genesis.GetHash();
+      uint256 besthash;
+      memset(&besthash,0xFF,32);
+      while (newhash > hashTarget) {
+        ++genesis.nNonce;
+          if (genesis.nNonce == 0){
+              printf("NONCE WRAPPED, incrementing time");
+              ++genesis.nTime;
+          }
+    newhash = genesis.GetHash();
+    if(newhash < besthash){
+        besthash=newhash;
+        printf("New best: %s\n", newhash.GetHex().c_str());
+    }
+      }
+      printf("Found Genesis, Nonce: %ld, Hash: %s\n", genesis.nNonce, genesis.GetHash().GetHex().c_str());
+      printf("Gensis Hash Merkle: %s\n", genesis.hashMerkleRoot.ToString().c_str());
+  }
 
 //
 // Main network
@@ -83,7 +104,7 @@ public:
         genesis.nBits    = bnProofOfWorkLimit.GetCompact();
         genesis.nNonce   = 0;
 
-         while (genesis.GetHash() > hashTarget)
+      /*   while (genesis.GetHash() > hashTarget)
        {
            ++genesis.nNonce;
            if (genesis.nNonce == 0)
@@ -95,41 +116,19 @@ public:
      {
        printf("nonce %08u: hash = %s \n", genesis.nNonce, genesis.GetHash().ToString().c_str());
      }
-       }
+   }*/
 
         hashGenesisBlock = genesis.GetHash();
 
-         printf("MN nNonce %u\n", genesis.nNonce);
+         /*printf("MN nNonce %u\n", genesis.nNonce);
  printf("MN hashGenesisBlock %s\n", hashGenesisBlock.ToString().c_str());
  printf("MN hashMerkleRoot %s\n", genesis.hashMerkleRoot.ToString().c_str());
- printf("MN nTime %u\n", genesis.nTime);
+ printf("MN nTime %u\n", genesis.nTime);*/
 
           assert(hashGenesisBlock == uint256("0x00000c810e99aca6446726bbba572ce43b1cb9cc3ad179804d9a45d4d5d57f84"));
           assert(genesis.hashMerkleRoot == uint256("0xb25d62e296d0ac524eea21ffaa3b1d78fdc0429ad00a7fc052df74a457f0bd89"));
 
         //MineGenesis(genesis);
-      /*  void MineGenesis(CBlock genesis){
-            // This will figure out a valid hash and Nonce if you're creating a different genesis block:
-            uint256 hashTarget = CBigNum().SetCompact(Params().ProofOfWorkLimit().GetCompact()).getuint256();
-            printf("Target: %s\n", hashTarget.GetHex().c_str());
-            uint256 newhash = genesis.GetHash();
-            uint256 besthash;
-            memset(&besthash,0xFF,32);
-            while (newhash > hashTarget) {
-            	++genesis.nNonce;
-                if (genesis.nNonce == 0){
-                    printf("NONCE WRAPPED, incrementing time");
-                    ++genesis.nTime;
-                }
-        	newhash = genesis.GetHash();
-        	if(newhash < besthash){
-        	    besthash=newhash;
-        	    printf("New best: %s\n", newhash.GetHex().c_str());
-        	}
-            }
-            printf("Found Genesis, Nonce: %ld, Hash: %s\n", genesis.nNonce, genesis.GetHash().GetHex().c_str());
-            printf("Gensis Hash Merkle: %s\n", genesis.hashMerkleRoot.ToString().c_str());
-        }*/
 
         vSeeds.push_back(CDNSSeedData("", "")); // Vultr cloud node 1
         vSeeds.push_back(CDNSSeedData("", "")); // Vultr cloud node 2
