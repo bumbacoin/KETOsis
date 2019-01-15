@@ -104,26 +104,10 @@ public:
         genesis.nBits    = bnProofOfWorkLimit.GetCompact();
         genesis.nNonce   = 0;
 
-      /*   while (genesis.GetHash() > hashTarget)
-       {
-           ++genesis.nNonce;
-           if (genesis.nNonce == 0)
-           {
-               printf("NONCE WRAPPED, incrementing time");
-               ++genesis.nTime;
-           }
-     if (genesis.nNonce % 10000 == 0)
-     {
-       printf("nonce %08u: hash = %s \n", genesis.nNonce, genesis.GetHash().ToString().c_str());
-     }
-   }*/
+        LogPrintf("genesis.hashMerkleRoot=%s\n", genesis.hashMerkleRoot.ToString());
+        LogPrintf("hashGenesisBlock=%s\n", hashGenesisBlock.ToString());
 
         hashGenesisBlock = genesis.GetHash();
-
-         /*printf("MN nNonce %u\n", genesis.nNonce);
- printf("MN hashGenesisBlock %s\n", hashGenesisBlock.ToString().c_str());
- printf("MN hashMerkleRoot %s\n", genesis.hashMerkleRoot.ToString().c_str());
- printf("MN nTime %u\n", genesis.nTime);*/
 
           assert(hashGenesisBlock == uint256("0x00000c810e99aca6446726bbba572ce43b1cb9cc3ad179804d9a45d4d5d57f84"));
           assert(genesis.hashMerkleRoot == uint256("0xb25d62e296d0ac524eea21ffaa3b1d78fdc0429ad00a7fc052df74a457f0bd89"));
