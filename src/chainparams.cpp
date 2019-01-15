@@ -71,10 +71,10 @@ public:
         // The message start string is designed to be unlikely to occur in normal data.
         // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
         // a large 4-byte int at any alignment.
-        pchMessageStart[0] = 0xed;
-        pchMessageStart[1] = 0xfb;
-        pchMessageStart[2] = 0xa5;
-        pchMessageStart[3] = 0x7c;
+        pchMessageStart[0] = 0xe2;
+        pchMessageStart[1] = 0x5b;
+        pchMessageStart[2] = 0xa2;
+        pchMessageStart[3] = 0x4c;
         vAlertPubKey = ParseHex("04d9554786c6f8cb39c13608865f1d5fdfeee349ae168301037c993b054007d40105ab5f98970ed914a956e5fd7a0877f36110e55f82ffeb40e06ab6cca2f883d4");
         nDefaultPort = 8273;
         nRPCPort = 8272;
@@ -88,7 +88,7 @@ public:
         //    CTxIn(COutPoint(0000000000, 4294967295), coinbase 00012a24323020466562203230313420426974636f696e2041544d7320636f6d6520746f20555341)
         //    CTxOut(empty)
         //  vMerkleTree: 12630d16a9
-        const char* pszTimestamp = "20 July 2018 - KETOsis launch";
+        const char* pszTimestamp = "KETOsis launch";
         std::vector<CTxIn> vin;
         vin.resize(1);
         vin[0].scriptSig = CScript() << 0 << CBigNum(42) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
@@ -102,15 +102,16 @@ public:
         genesis.nVersion = 1;
         genesis.nTime    = 1547444627;
         genesis.nBits    = bnProofOfWorkLimit.GetCompact();
-        genesis.nNonce   = 0;
+        genesis.nNonce   = 6073897;
 
-        LogPrintf("genesis.hashMerkleRoot=%s\n", genesis.hashMerkleRoot.ToString());
-        LogPrintf("hashGenesisBlock=%s\n", hashGenesisBlock.ToString());
 
         hashGenesisBlock = genesis.GetHash();
-
-          assert(hashGenesisBlock == uint256("0x00000c810e99aca6446726bbba572ce43b1cb9cc3ad179804d9a45d4d5d57f84"));
-          assert(genesis.hashMerkleRoot == uint256("0xb25d62e296d0ac524eea21ffaa3b1d78fdc0429ad00a7fc052df74a457f0bd89"));
+        LogPrintf("genesis.hashMerkleRoot=%s\n", genesis.hashMerkleRoot.ToString());
+        LogPrintf("hashGenesisBlock=%s\n", hashGenesisBlock.ToString());
+        printf("genesis.GetHash = %s\n", genesis.GetHash().ToString().c_str());
+        printf("genesis.hashMerkleRoot=%s\n", genesis.hashMerkleRoot.ToString());
+          assert(hashGenesisBlock == uint256("0x"));
+          assert(genesis.hashMerkleRoot == uint256("0x"));
 
         //MineGenesis(genesis);
 
