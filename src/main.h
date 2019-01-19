@@ -51,7 +51,7 @@ static const int64_t MIN_RELAY_TX_FEE = MIN_TX_FEE;
 static const int64_t MAX_MONEY = std::numeric_limits<int64_t>::max();
 inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 /** Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp. */
-static const unsigned int LOCKTIME_THRESHOLD = 400000000; // 2 Billion Max
+static const unsigned int LOCKTIME_THRESHOLD = 400000000; // 400 Million Max
 
 static const int64_t COIN_YEAR_REWARD = 100 * CENT; // 100% per year
 

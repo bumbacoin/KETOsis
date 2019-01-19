@@ -45,8 +45,8 @@ CBigNum bnProofOfStakeLimitV2(~uint256(0) >> 48);
 CBigNum bnProofOfStakeLimitFixed(~uint256(0) >> 40);
 CBigNum bnProofOfStakeLimitFixed2(~uint256(0) >> 49);
 
-int nStakeMinConfirmations = 50;
-unsigned int nStakeMinAge = 6 * 60 * 30; // 3 hour
+int nStakeMinConfirmations = 20;
+unsigned int nStakeMinAge = 6 * 60 * 60; // 6 hour
 unsigned int nModifierInterval = 10 * 60; // time to elapse before new modifier is computed
 int nStakeMinConfirmationsFix = 60; // 1 Hour
 int nStakeMinConfirmationsFix2 = 20; // 20 Minutes
@@ -1013,8 +1013,8 @@ int64_t GetProofOfWorkReward(int64_t nFees)
     else if(pindexBest->nHeight <= 10) { //0 for premine wallet
        nSubsidy = 0 * COIN;
     }
-	else if(pindexBest->nHeight <= 21000) { //14 days worth
-       nSubsidy = 50 * COIN;
+	else if(pindexBest->nHeight <= 231400) {
+       nSubsidy = 65 * COIN;
 
     } else {
         nSubsidy = 0 * COIN;
@@ -1030,59 +1030,15 @@ int64_t GetProofOfStakeReward(const CBlockIndex* pindexPrev, int64_t nCoinAge, i
 {
     int64_t nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8);
 
-	 if(pindexBest->nHeight <= 21000) {
-        nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 10;
+	 if(pindexBest->nHeight <= 525600) {
+        nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 4;
 	}
-	else if(pindexBest->nHeight <= 29999) {
+	else if(pindexBest->nHeight <= 1576800) {
        nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 1;
        }
-	else if(pindexBest->nHeight <= 32499) {
-       nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 50;
-       }
-    else if(pindexBest->nHeight <= 39949) {
-       nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 25;
-       }
-    else if(pindexBest->nHeight <= 39999) {
-       nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 2.5;
-       }
-	else if(pindexBest->nHeight <= 42499) {
-       nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 100;
-      }
-	else if(pindexBest->nHeight <= 49999) {
-       nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 1;
-      }
-	else if(pindexBest->nHeight <= 59999) {
-       nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 10;
-      }
-	else if(pindexBest->nHeight <= 69999) {
-       nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 1;
-      }
-	else if(pindexBest->nHeight <= 74999) {
-       nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 50;
-      }
-	else if(pindexBest->nHeight <= 79999) {
-       nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 5;
-      }
-    else if(pindexBest->nHeight <= 89999) {
-       nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 1;
-      }
-	else if(pindexBest->nHeight <= 92499) {
-       nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 100;
-      }
-	else if(pindexBest->nHeight <= 99999) {
-       nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 1;
-      }
 
-	else if(pindexBest->nMoneySupply <= 50000000000000000) {
-			if (pindexBest->nHeight <= 110000) {
-            nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 2;
-	        }
-			else {
-				nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 1/5;
-			}
-		}
 	else {
-		nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 0;
+		nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 0.5;
 	}
 
     LogPrint("creation", "GetProofOfStakeReward(): create=%s nCoinAge=%d\n", FormatMoney(nSubsidy), nCoinAge);
