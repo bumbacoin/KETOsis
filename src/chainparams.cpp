@@ -20,28 +20,28 @@ struct SeedSpec6 {
 
 #include "chainparamsseeds.h"
 
- void MineGenesis(CBlock genesis){
-      // This will figure out a valid hash and Nonce if you're creating a different genesis block:
-      uint256 hashTarget = CBigNum().SetCompact(Params().ProofOfWorkLimit().GetCompact()).getuint256();
-      printf("Target: %s\n", hashTarget.GetHex().c_str());
-      uint256 newhash = genesis.GetHash();
-      uint256 besthash;
-      memset(&besthash,0xFF,32);
-      while (newhash > hashTarget) {
-        ++genesis.nNonce;
-          if (genesis.nNonce == 0){
-              printf("NONCE WRAPPED, incrementing time");
-              ++genesis.nTime;
-          }
-    newhash = genesis.GetHash();
-    if(newhash < besthash){
-        besthash=newhash;
-        printf("New best: %s\n", newhash.GetHex().c_str());
+void MineGenesis(CBlock genesis){
+    // This will figure out a valid hash and Nonce if you're creating a different genesis block:
+    uint256 hashTarget = CBigNum().SetCompact(Params().ProofOfWorkLimit().GetCompact()).getuint256();
+    printf("Target: %s\n", hashTarget.GetHex().c_str());
+    uint256 newhash = genesis.GetHash();
+    uint256 besthash;
+    memset(&besthash,0xFF,32);
+    while (newhash > hashTarget) {
+    	++genesis.nNonce;
+        if (genesis.nNonce == 0){
+            printf("NONCE WRAPPED, incrementing time");
+            ++genesis.nTime;
+        }
+	newhash = genesis.GetHash();
+	if(newhash < besthash){
+	    besthash=newhash;
+	    printf("New best: %s\n", newhash.GetHex().c_str());
+	}
     }
-      }
-      printf("Found Genesis, Nonce: %ld, Hash: %s\n", genesis.nNonce, genesis.GetHash().GetHex().c_str());
-      printf("Gensis Hash Merkle: %s\n", genesis.hashMerkleRoot.ToString().c_str());
-  }
+    printf("Found Genesis, Nonce: %ld, Hash: %s\n", genesis.nNonce, genesis.GetHash().GetHex().c_str());
+    printf("Gensis Hash Merkle: %s\n", genesis.hashMerkleRoot.ToString().c_str());
+}
 
 //
 // Main network
@@ -75,9 +75,9 @@ public:
         pchMessageStart[1] = 0x5b;
         pchMessageStart[2] = 0xa2;
         pchMessageStart[3] = 0x4c;
-        vAlertPubKey = ParseHex("04d9554786c6f8cb39c13608865f1d5fdfeee349ae168301037c993b054007d40105ab5f98970ed914a956e5fd7a0877f36110e55f82ffeb40e06ab6cca2f883d4");
-        nDefaultPort = 8273;
-        nRPCPort = 8272;
+        vAlertPubKey = ParseHex("");
+        nDefaultPort = 8280;
+        nRPCPort = 8281;
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 20);
 
         // Build the genesis block. Note that the output of the genesis coinbase cannot
@@ -103,7 +103,6 @@ public:
         genesis.nTime    = 1547444627;
         genesis.nBits    = bnProofOfWorkLimit.GetCompact();
         genesis.nNonce   = 6073897;
-
 
         hashGenesisBlock = genesis.GetHash();
         //LogPrintf("genesis.hashMerkleRoot=%s\n", genesis.hashMerkleRoot.ToString());
@@ -131,8 +130,8 @@ public:
 
         convertSeed6(vFixedSeeds, pnSeed6_main, ARRAYLEN(pnSeed6_main));
 
-        nLastPOWBlock = 21000;
-        nPOSStartBlock = 100;
+        nLastPOWBlock = 231400;
+        nPOSStartBlock = 10080;
     }
 
     virtual const CBlock& GenesisBlock() const { return genesis; }
@@ -163,7 +162,8 @@ public:
         pchMessageStart[2] = 0x25;
         pchMessageStart[3] = 0x14;
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 16);
-        vAlertPubKey = ParseHex("040dcd06d0afee40040ae8ea67d4c56d0e25af8010f5fa46ab54a837ee470da99cb5588e282b21354353761125c7a799d6ca707377b15fbe65d5da0ff33c08e13f");
+        bnProofOfStakeLimit = CBigNum(~uint256(0) >> 16);
+        vAlertPubKey = ParseHex("");
         nDefaultPort = 8271;
         nRPCPort = 8270;
 

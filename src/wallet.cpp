@@ -1133,23 +1133,9 @@ void CWallet::AvailableCoinsForStaking(vector<COutput>& vCoins, unsigned int nSp
             if (nDepth < 1)
                 continue;
 			
-            if (nBestHeight >= 60000)
-            {
-                if (nDepth < nStakeMinConfirmationsFix)
-                    continue;
-            }
-			
-            if (IsProtocolV3(nSpendTime))
-            {
-                if (nDepth < nStakeMinConfirmations)
-                    continue;
-            }
-            else
-            {
-                // Filtering by tx timestamp instead of block timestamp may give false positives but never false negatives
-                if (pcoin->nTime + nStakeMinAge > nSpendTime)
-                    continue;
-            }
+            // Filtering by tx timestamp instead of block timestamp may give false positives but never false negatives
+            if (pcoin->nTime + nStakeMinAge > nSpendTime)
+                continue;
 
             if (pcoin->GetBlocksToMaturity() > 0)
                 continue;
@@ -1578,20 +1564,12 @@ uint64_t CWallet::GetStakeWeight() const
     LOCK2(cs_main, cs_wallet);
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
-        if (IsProtocolV3(nCurrentTime))
-        {
-            if (pcoin.first->GetDepthInMainChain() >= nStakeMinConfirmations)
-                nWeight += pcoin.first->vout[pcoin.second].nValue;
-        }
-        else
-        {
-            CTxIndex txindex;
-            if (!txdb.ReadTxIndex(pcoin.first->GetHash(), txindex))
-                continue;
+        CTxIndex txindex;
+        if (!txdb.ReadTxIndex(pcoin.first->GetHash(), txindex))
+            continue;
 
-            if (nCurrentTime - pcoin.first->nTime > nStakeMinAge)
-                nWeight += pcoin.first->vout[pcoin.second].nValue;
-        }
+        if (nCurrentTime - pcoin.first->nTime > nStakeMinAge)
+            nWeight += pcoin.first->vout[pcoin.second].nValue;
     }
 
     return nWeight;
@@ -1728,15 +1706,8 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             if (pcoin.first->vout[pcoin.second].nValue >= GetStakeCombineThreshold())
                 continue;
             // Do not add input that is still too young
-            if (IsProtocolV3(txNew.nTime))
-            {
-                // properly handled by selection function
-            }
-            else
-            {
-                if (nTimeWeight < nStakeMinAge)
-                    continue;
-            }
+            if (nTimeWeight < nStakeMinAge)
+                continue;
 
             txNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
             nCredit += pcoin.first->vout[pcoin.second].nValue;

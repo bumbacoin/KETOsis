@@ -39,19 +39,13 @@ CTxMemPool mempool;
 map<uint256, CBlockIndex*> mapBlockIndex;
 set<pair<COutPoint, unsigned int> > setStakeSeen;
 
-CBigNum bnProofOfWorkLimit(~uint256(0) >> 4);
+//CBigNum bnProofOfWorkLimit(~uint256(0) >> 4);
 CBigNum bnProofOfStakeLimit(~uint256(0) >> 20);
-CBigNum bnProofOfStakeLimitV2(~uint256(0) >> 48);
-CBigNum bnProofOfStakeLimitFixed(~uint256(0) >> 40);
-CBigNum bnProofOfStakeLimitFixed2(~uint256(0) >> 49);
 
-int nStakeMinConfirmations = 20;
 unsigned int nStakeMinAge = 6 * 60 * 60; // 6 hour
 unsigned int nModifierInterval = 10 * 60; // time to elapse before new modifier is computed
-int nStakeMinConfirmationsFix = 60; // 1 Hour
-int nStakeMinConfirmationsFix2 = 20; // 20 Minutes
 
-int nCoinbaseMaturity = 15;
+int nCoinbaseMaturity = 20;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 
@@ -990,36 +984,26 @@ void static PruneOrphanBlocks()
     }
 }
 
-static CBigNum GetProofOfStakeLimit(int nHeight)
+static CBigNum GetProofOfStakeLimit()
 {
-	if ( nHeight >= 101000 )
-		return bnProofOfStakeLimitFixed2;
-    else if ( nHeight >= 14900 )
-        return bnProofOfStakeLimitFixed;
-    else if (IsProtocolV2(nHeight))
-        return bnProofOfStakeLimitV2;
-    else
-        return bnProofOfStakeLimit;
+	return bnProofOfStakeLimit;
 }
 
 // miner's coin base reward
 int64_t GetProofOfWorkReward(int64_t nFees)
 {
-    int64_t nSubsidy = 1 * COIN;
+    int64_t nSubsidy = 0 * COIN;
 
     if(pindexBest->nHeight == 1) {
         nSubsidy = 1000000 * COIN; //1 Million Premine
 	}
-    else if(pindexBest->nHeight <= 10) { //0 for premine wallet
+    else if(pindexBest->nHeight <= 100) { //0 for premine wallet
        nSubsidy = 0 * COIN;
     }
-	else if(pindexBest->nHeight <= 231400) {
+	else (pindexBest->nHeight <= 231400) {
        nSubsidy = 65 * COIN;
-
-    } else {
-        nSubsidy = 0 * COIN;
     }
-
+    
     LogPrint("GetProofOfWorkReward() : create=%s", FormatMoney(nSubsidy).c_str(), nSubsidy);
 
     return nSubsidy + nFees;
@@ -1032,36 +1016,21 @@ int64_t GetProofOfStakeReward(const CBlockIndex* pindexPrev, int64_t nCoinAge, i
 
 	 if(pindexBest->nHeight <= 525600) {
         nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 4;
-	}
+		}
 	else if(pindexBest->nHeight <= 1576800) {
        nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 1;
        }
 
 	else {
-		nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) * 0.5;
-	}
+		nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8) / 2;
+		}
 
     LogPrint("creation", "GetProofOfStakeReward(): create=%s nCoinAge=%d\n", FormatMoney(nSubsidy), nCoinAge);
 
     return nSubsidy + nFees;
 }
 
-int64_t nTargetTimespan(int nHeight)
-{
-    if (pindexBest->nHeight <= 12000) {
-        int64_t timespanfix = (7 * 24 * 60);
-        return timespanfix;
-    }
-    else if (nHeight < 14900) {
-        int64_t timespanfix = (7 * 24 * 60 * 60); // timespan-fix from block 12000
-        return timespanfix;
-    }
-    else {
-        int64_t timespanfix = (60 * 60); // timespan-fix from block 14900
-        return timespanfix;
-    }
-}
-// this will leave your last fix untouched
+int64_t nTargetTimespan = 12 * 60 * 60;
 
 // ppcoin: find last block index up to pindex
 const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake)
@@ -1073,7 +1042,7 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 
 unsigned int GetNextTargetRequired_PoS(const CBlockIndex* pindexLast, bool fProofOfStake)
 {
-    CBigNum bnTargetLimit = fProofOfStake ? GetProofOfStakeLimit(pindexLast->nHeight) : Params().ProofOfWorkLimit();
+    CBigNum bnTargetLimit = fProofOfStake ? GetProofOfStakeLimit() : Params().ProofOfWorkLimit();
 
     if (pindexLast == NULL)
         return bnTargetLimit.GetCompact(); // genesis block
@@ -1087,14 +1056,9 @@ unsigned int GetNextTargetRequired_PoS(const CBlockIndex* pindexLast, bool fProo
 
     int64_t nTargetSpacing = GetTargetSpacing(pindexLast->nHeight);
     int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
-    if (IsProtocolV1RetargetingFixed(pindexLast->nHeight)) {
-        if (nActualSpacing < 0)
-            nActualSpacing = nTargetSpacing;
-    }
-    if (IsProtocolV3(pindexLast->nTime)) {
-        if (nActualSpacing > nTargetSpacing * 10)
-            nActualSpacing = nTargetSpacing * 10;
-    }
+
+    if (nActualSpacing > nTargetSpacing * 10)
+        nActualSpacing = nTargetSpacing * 10;
 
     // ppcoin: target change every block
     // ppcoin: retarget with exponential moving toward target spacing
@@ -1179,7 +1143,7 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfS
     // Smoothly Transition: GetNextTargetRequired_Initial_POW -> DGW -> GetNextTargetRequired_POS
     if (pindexLast->nHeight < 25)
         return GetNextTargetRequired_PoS(pindexLast, fProofOfStake);
-    else if (pindexLast->nHeight < 10500)
+    else if (pindexLast->nHeight < 10080)
         return DarkGravityWave3(pindexLast);
     else
         return GetNextTargetRequired_PoS(pindexLast, fProofOfStake);
@@ -1191,8 +1155,8 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     bnTarget.SetCompact(nBits);
 
     // Check range
-    // if (bnTarget <= 0 || bnTarget > Params().ProofOfWorkLimit())
-       // return error("CheckProofOfWork() : nBits below minimum work");
+    if (bnTarget <= 0 || bnTarget > Params().ProofOfWorkLimit())
+       return error("CheckProofOfWork() : nBits below minimum work");
 
     // Check proof of work matches claimed amount
     if (hash > bnTarget.getuint256())
@@ -1969,24 +1933,12 @@ bool CTransaction::GetCoinAge(CTxDB& txdb, const CBlockIndex* pindexPrev, uint64
         if (nTime < txPrev.nTime)
             return false;  // Transaction timestamp violation
 
-        if (IsProtocolV3(nTime))
-        {
-            int nSpendDepth;
-            if (IsConfirmedInNPrevBlocks(txindex, pindexPrev, nStakeMinConfirmations - 1, nSpendDepth))
-            {
-                LogPrint("coinage", "coin age skip nSpendDepth=%d\n", nSpendDepth + 1);
-                continue; // only count coins meeting min confirmations requirement
-            }
-        }
-        else
-        {
-            // Read block header
-            CBlock block;
-            if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-                return false; // unable to read block of previous transaction
-            if (block.GetBlockTime() + nStakeMinAge > nTime)
-                continue; // only count coins meeting min age requirement
-        }
+        // Read block header
+        CBlock block;
+        if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+            return false; // unable to read block of previous transaction
+        if (block.GetBlockTime() + nStakeMinAge > nTime)
+            continue; // only count coins meeting min age requirement
 
         int64_t nValueIn = txPrev.vout[txin.prevout.n].nValue;
         bnCentSecond += CBigNum(nValueIn) * (nTime-txPrev.nTime) / CENT;
@@ -2086,7 +2038,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
         return DoS(50, error("CheckBlock() : proof of work failed"));
 
     // Check timestamp
-    if (GetBlockTime() > FutureDriftV2(GetAdjustedTime()))
+    if (GetBlockTime() > FutureDrift(GetAdjustedTime()))
         return error("CheckBlock() : block timestamp too far in the future");
 
     // First transaction must be coinbase, the rest must not be
@@ -2172,10 +2124,8 @@ bool CBlock::AcceptBlock()
     CBlockIndex* pindexPrev = (*mi).second;
     int nHeight = pindexPrev->nHeight+1;
 
-    if (IsProtocolV2(nHeight) && nVersion < 7)
+    if (nVersion < 7)
         return DoS(100, error("AcceptBlock() : reject too old nVersion = %d", nVersion));
-    else if (!IsProtocolV2(nHeight) && nVersion > 6)
-        return DoS(100, error("AcceptBlock() : reject too new nVersion = %d", nVersion));
 
     if (IsProofOfWork() && nHeight > Params().LastPOWBlock())
         return DoS(100, error("AcceptBlock() : reject proof-of-work at height %d", nHeight));
@@ -2446,14 +2396,13 @@ bool CBlock::SignBlock(CWallet& wallet, int64_t nFees)
 
     CKey key;
     CTransaction txCoinStake;
-    if (IsProtocolV2(nBestHeight+1))
-        txCoinStake.nTime &= ~STAKE_TIMESTAMP_MASK;
+    txCoinStake.nTime &= ~STAKE_TIMESTAMP_MASK;
 
     int64_t nSearchTime = txCoinStake.nTime; // search to current time
 
     if (nSearchTime > nLastCoinStakeSearchTime)
     {
-        int64_t nSearchInterval = IsProtocolV2(nBestHeight+1) ? 1 : nSearchTime - nLastCoinStakeSearchTime;
+        int64_t nSearchInterval = 1;
         if (wallet.CreateCoinStake(wallet, nBits, nSearchInterval, nFees, txCoinStake, key))
         {
             if (txCoinStake.nTime >= pindexBest->GetPastTimeLimit()+1)
@@ -2597,7 +2546,6 @@ bool LoadBlockIndex(bool fAllowNew)
 
     if (TestNet())
     {
-        nStakeMinConfirmations = 10;
         nCoinbaseMaturity = 10; // test maturity is 10 blocks
     }
 
@@ -3022,15 +2970,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CAddress addrFrom;
         uint64_t nNonce = 1;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
-         bool badVersion = false;
-          if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
-           badVersion = true;
+        bool badVersion = false;
         if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
            badVersion = true;
-        if (nBestHeight >= 60000 && pfrom->nVersion < 70011)
-           badVersion = true;
-	   if (nBestHeight >= 39950 && pfrom->nVersion < 70011)
-           badVersion = true;
+//        if (nBestHeight >= 60000 && pfrom->nVersion < 70011)
+//           badVersion = true;
         if (badVersion)
         {
             // disconnect from peers older than this proto version
