@@ -162,7 +162,6 @@ public:
         pchMessageStart[2] = 0x25;
         pchMessageStart[3] = 0x14;
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 16);
-        bnProofOfStakeLimit = CBigNum(~uint256(0) >> 16);
         vAlertPubKey = ParseHex("");
         nDefaultPort = 8271;
         nRPCPort = 8270;

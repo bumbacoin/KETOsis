@@ -42,6 +42,7 @@ set<pair<COutPoint, unsigned int> > setStakeSeen;
 //CBigNum bnProofOfWorkLimit(~uint256(0) >> 4);
 CBigNum bnProofOfStakeLimit(~uint256(0) >> 20);
 
+unsigned int nTargetSpacing = 60;
 unsigned int nStakeMinAge = 6 * 60 * 60; // 6 hour
 unsigned int nModifierInterval = 10 * 60; // time to elapse before new modifier is computed
 
@@ -301,7 +302,7 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
         return false;
     }
     // nTime has different purpose from nLockTime but can be used in similar attacks
-    if (tx.nTime > FutureDrift(GetAdjustedTime(), nBestHeight + 1)) {
+    if (tx.nTime > FutureDrift(GetAdjustedTime())) {
         reason = "time-too-new";
         return false;
     }
@@ -1000,7 +1001,7 @@ int64_t GetProofOfWorkReward(int64_t nFees)
     else if(pindexBest->nHeight <= 100) { //0 for premine wallet
        nSubsidy = 0 * COIN;
     }
-	else (pindexBest->nHeight <= 231400) {
+	else if(pindexBest->nHeight <= 231400) {
        nSubsidy = 65 * COIN;
     }
     
@@ -1042,7 +1043,7 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 
 unsigned int GetNextTargetRequired_PoS(const CBlockIndex* pindexLast, bool fProofOfStake)
 {
-    CBigNum bnTargetLimit = fProofOfStake ? GetProofOfStakeLimit() : Params().ProofOfWorkLimit();
+    CBigNum bnTargetLimit = fProofOfStake ? GetProofOfStakeLimit() : Params().ProofOfWorkLimit().GetCompact();
 
     if (pindexLast == NULL)
         return bnTargetLimit.GetCompact(); // genesis block
@@ -1054,7 +1055,6 @@ unsigned int GetNextTargetRequired_PoS(const CBlockIndex* pindexLast, bool fProo
     if (pindexPrevPrev->pprev == NULL)
         return bnTargetLimit.GetCompact(); // second block
 
-    int64_t nTargetSpacing = GetTargetSpacing(pindexLast->nHeight);
     int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
 
     if (nActualSpacing > nTargetSpacing * 10)
@@ -1064,7 +1064,7 @@ unsigned int GetNextTargetRequired_PoS(const CBlockIndex* pindexLast, bool fProo
     // ppcoin: retarget with exponential moving toward target spacing
     CBigNum bnNew;
     bnNew.SetCompact(pindexPrev->nBits);
-    int64_t nInterval = nTargetTimespan(pindexLast->nHeight) / nTargetSpacing;
+    int64_t nInterval = nTargetTimespan / nTargetSpacing;
     bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
     bnNew /= ((nInterval + 1) * nTargetSpacing);
 
@@ -1089,7 +1089,7 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast/*, const CBlo
     CBigNum PastDifficultyAveragePrev;
 
     if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < PastBlocksMin) {
-        return bnProofOfWorkLimit.GetCompact();
+        return Params().ProofOfWorkLimit().GetCompact();
     }
 
     for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
@@ -1112,8 +1112,6 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast/*, const CBlo
         BlockReading = BlockReading->pprev;
     }
 
-    int64_t nTargetSpacing = GetTargetSpacing(pindexLast->nHeight);
-
     CBigNum bnNew(PastDifficultyAverage);
 
     int64_t nTargetTimespan = CountBlocks*nTargetSpacing;
@@ -1127,8 +1125,8 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast/*, const CBlo
     bnNew *= nActualTimespan;
     bnNew /= nTargetTimespan;
 
-    if (bnNew > bnProofOfWorkLimit){
-        bnNew = bnProofOfWorkLimit;
+    if (bnNew > Params().ProofOfWorkLimit()){
+        bnNew = Params().ProofOfWorkLimit();
     }
 
     //printf("Difficulty Retarget - Dark Gravity Wave 3\n");
@@ -2134,7 +2132,7 @@ bool CBlock::AcceptBlock()
         return DoS(100, error("AcceptBlock() : reject proof-of-stake at height %d", nHeight));
 
     // Check coinbase timestamp
-    if (GetBlockTime() > FutureDrift((int64_t)vtx[0].nTime, nHeight))
+    if (GetBlockTime() > FutureDrift((int64_t)vtx[0].nTime))
         return DoS(50, error("AcceptBlock() : coinbase timestamp is too early"));
 
     // Check coinstake timestamp
@@ -2146,7 +2144,7 @@ bool CBlock::AcceptBlock()
         return DoS(100, error("AcceptBlock() : incorrect %s", IsProofOfWork() ? "proof-of-work" : "proof-of-stake"));
 
     // Check timestamp against prev
-    if (GetBlockTime() <= pindexPrev->GetPastTimeLimit() || FutureDrift(GetBlockTime(), nHeight) < pindexPrev->GetBlockTime())
+    if (GetBlockTime() <= pindexPrev->GetPastTimeLimit() || FutureDrift(GetBlockTime()) < pindexPrev->GetBlockTime())
         return error("AcceptBlock() : block's timestamp is too early");
 
     // Check that all transactions are finalized

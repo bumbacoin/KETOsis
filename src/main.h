@@ -61,7 +61,6 @@ inline bool IsProtocolV3(int64_t nTime) { return TestNet() || nTime > 1470467000
 
 inline int64_t FutureDrift(int64_t nTime) { return nTime + 10 * 60; }
 
-inline unsigned int GetTargetSpacing = 60;
 
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
@@ -69,6 +68,7 @@ extern CTxMemPool mempool;
 extern std::map<uint256, CBlockIndex*> mapBlockIndex;
 extern std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
 extern CBlockIndex* pindexGenesisBlock;
+extern unsigned int nTargetSpacing;
 extern unsigned int nStakeMinAge;
 extern unsigned int nNodeLifespan;
 extern int nCoinbaseMaturity;
