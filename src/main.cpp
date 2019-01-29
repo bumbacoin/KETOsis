@@ -39,7 +39,6 @@ CTxMemPool mempool;
 map<uint256, CBlockIndex*> mapBlockIndex;
 set<pair<COutPoint, unsigned int> > setStakeSeen;
 
-CBigNum bnProofOfWorkLimit(~uint256(0) >> 4);
 CBigNum bnProofOfStakeLimit(~uint256(0) >> 20);
 
 unsigned int nTargetSpacing = 60;
@@ -1089,7 +1088,7 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast/*, const CBlo
     CBigNum PastDifficultyAveragePrev;
 
     if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < PastBlocksMin) {
-        return bnProofOfWorkLimit.GetCompact();
+        return Params().ProofOfWorkLimit().GetCompact();
     }
 
     for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
@@ -1153,8 +1152,8 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     bnTarget.SetCompact(nBits);
 
     // Check range
-    //if (bnTarget <= 0 || bnTarget > Params().ProofOfWorkLimit())
-    //   return error("CheckProofOfWork() : nBits below minimum work");
+    if (bnTarget <= 0 || bnTarget > Params().ProofOfWorkLimit())
+       return error("CheckProofOfWork() : nBits below minimum work");
 
     // Check proof of work matches claimed amount
     if (hash > bnTarget.getuint256())
